@@ -7,13 +7,28 @@
   <style>
     :root { --spacing: 1rem; }
     body { padding: 1rem; }
-    .comensal-card { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; background: #f9f9f9; }
-    .comensal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .btn-remove { background: #d32f2f !important; border: none; padding: 0.2rem 0.5rem; width: auto; }
+    .comensal-card { border: 1px solid #ccc; padding: 0.5rem; margin-bottom: 1rem; border-radius: 8px; background: #f9f9f9; }
+    .comensal-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+    .comensal-header h4 { margin: 0; font-size: 1rem; flex-grow: 1; }
+    .comensal-header .toggle-icon { margin-right: 0.5rem; transition: transform 0.3s; }
+    
+    .comensal-body { display: none; padding: 1rem 0.5rem; border-top: 1px solid #eee; margin-top: 0.5rem; }
+    .expanded .comensal-body { display: block; }
+    .expanded .toggle-icon { transform: rotate(180deg); }
+
+    .btn-remove { background: #d32f2f !important; border: none; padding: 0.2rem 0.5rem; width: auto; font-size: 0.8rem; margin-left: 0.5rem; }
     .sticky-bottom { position: sticky; bottom: 0; background: white; padding: 1rem 0; border-top: 1px solid #eee; z-index: 100; }
     select, input { margin-bottom: 0.5rem !important; }
     label { font-weight: bold; font-size: 0.9rem; margin-top: 0.5rem; }
     h4 { margin-bottom: 0.5rem; color: #106ebe; }
+    header h3 { margin-bottom: 0.5rem; }
+    header p { margin-bottom: 1rem; }
 
     /* Estilos para Controles Segmentados */
     .segmented-control {
@@ -93,8 +108,8 @@
 
   <main class="container">
     <header>
-      <h1>🍴 Menú Torneo Cudillero CUP 2026</h1>
-      <p>Selecciona tu nombre y el de tus acompañantes.</p>
+      <h3>🍴 Menú Cudillero CUP 2026</h3>
+      <p>Selecciona jugador y añade a tus acompañantes.</p>
     </header>
 
     <section id="form-container">
@@ -174,7 +189,7 @@ window.onload = () => {
       const container = document.getElementById('lista-comensales');
       const id = Date.now() + Math.floor(Math.random() * 1000);
       const div = document.createElement('div');
-      div.className = 'comensal-card';
+      div.className = 'comensal-card' + (datos ? '' : ' expanded'); // Expandido por defecto si es nuevo
       div.id = `c-${id}`;
       
       const isChecked = (val, target) => (val && val.toString().trim() === target) ? 'checked' : '';
@@ -189,7 +204,6 @@ window.onload = () => {
         return `
           <div class="segmented-control">
             ${opcionesMenuGlobal[tipoMenu].map((opt, index) => {
-              // Si es Picnic, forzamos que esté marcado y deshabilitado
               const checked = isPicnic ? 'checked' : isChecked(valorSeleccionado, opt);
               const disabled = isPicnic ? 'disabled' : '';
               
@@ -202,44 +216,50 @@ window.onload = () => {
         `;
       };
 
+      const tituloInicial = datos ? `${tipo}: ${datos.nombre}` : `${tipo}: Nuevo`;
+
       div.innerHTML = `
-        <div class="comensal-header">
-          <h4>${tipo}</h4>
-          <button class="btn-remove" onclick="document.getElementById('c-${id}').remove()">✕</button>
+        <div class="comensal-header" onclick="this.parentElement.classList.toggle('expanded')">
+          <span class="toggle-icon">▼</span>
+          <h4 id="title-${id}">${tituloInicial}</h4>
+          <button class="btn-remove" onclick="event.stopPropagation(); document.getElementById('c-${id}').remove()">✕</button>
         </div>
         
-        <label>Nombre completo</label>
-        <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}">
+        <div class="comensal-body">
+          <label>Nombre completo</label>
+          <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}" 
+                 oninput="document.getElementById('title-${id}').innerText = '${tipo}: ' + this.value">
 
-        <div class="menu-options">
-          <label>Cena Viernes - Plato</label>
-          ${renderSegmented('cenaV', datos?.cenaV)}
+          <div class="menu-options">
+            <label>Cena Viernes - Plato</label>
+            ${renderSegmented('cenaV', datos?.cenaV)}
 
-          <label>Cena Viernes - Postre</label>
-          ${renderSegmented('postreV', datos?.postreV)}
+            <label>Cena Viernes - Postre</label>
+            ${renderSegmented('postreV', datos?.postreV)}
 
-          <label>Comida Sábado - Primero</label>
-          ${renderSegmented('comidaS1', datos?.comidaS1)}
+            <label>Comida Sábado - Primero</label>
+            ${renderSegmented('comidaS1', datos?.comidaS1)}
 
-          <label>Comida Sábado - Segundo</label>
-          ${renderSegmented('comidaS2', datos?.comidaS2)}
+            <label>Comida Sábado - Segundo</label>
+            ${renderSegmented('comidaS2', datos?.comidaS2)}
 
-          <label>Comida Sábado - Postre</label>
-          ${renderSegmented('postreComidaS', datos?.postreComidaS)}
+            <label>Comida Sábado - Postre</label>
+            ${renderSegmented('postreComidaS', datos?.postreComidaS)}
 
-          <label>Cena Sábado - Plato</label>
-          ${renderSegmented('cenaS', datos?.cenaS)}
+            <label>Cena Sábado - Plato</label>
+            ${renderSegmented('cenaS', datos?.cenaS)}
 
-          <label>Cena Sábado - Postre</label>
-          ${renderSegmented('postreCenaS', datos?.postreCenaS)}
+            <label>Cena Sábado - Postre</label>
+            ${renderSegmented('postreCenaS', datos?.postreCenaS)}
 
-          <label>Picnic Domingo</label>
-          ${renderSegmented('picnicD', datos?.picnicD)}
+            <label>Picnic Domingo</label>
+            ${renderSegmented('picnicD', datos?.picnicD)}
 
-          <label>Alergias o Comentarios (Individual)</label>
-          <input type="text" class="c-observaciones" placeholder="Ej: Celíaco, sin lactosa..." value="${datos ? datos.observaciones : ''}">
+            <label>Alergias o Comentarios (Individual)</label>
+            <input type="text" class="c-observaciones" placeholder="Ej: Celíaco, sin lactosa..." value="${datos ? datos.observaciones : ''}">
+          </div>
+          <input type="hidden" class="c-tipo" value="${tipo}">
         </div>
-        <input type="hidden" class="c-tipo" value="${tipo}">
       `;
       container.appendChild(div);
     }
