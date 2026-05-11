@@ -39,7 +39,36 @@ Columnas (en orden):
 10. Observaciones
 11. Timestamp
 
-## 5. Gestión con GitHub
+## 5. Instrucciones de Instalación (Paso a Paso)
+
+Si no utilizas CLASP, sigue estos pasos para poner la web en marcha:
+
+### Paso 1: Preparar la Hoja de Google
+1. Crea una nueva Google Sheet.
+2. Cambia el nombre de la primera pestaña a `Configuracion`.
+    - En la **Columna A**, escribe la lista de los 16 jugadores (un nombre por fila).
+3. Crea una segunda pestaña llamada `Respuestas`.
+    - No es necesario escribir las cabeceras, el script las gestionará, pero se recomienda ponerlas para guiarte (ver sección 4 para el orden).
+
+### Paso 2: Configurar el Script
+1. En tu Google Sheet, ve a **Extensiones > Apps Script**.
+2. En el editor, verás un archivo llamado `Código.gs`. Cámbiale el nombre a `Code.gs` y pega el contenido de `src/Code.js` de este repositorio.
+3. Haz clic en el icono **+** junto a "Archivos" y selecciona **HTML**. Ponle de nombre `Index` (se creará como `Index.html`).
+4. Pega el contenido de `src/Index.html` de este repositorio en ese nuevo archivo.
+
+### Paso 3: Desplegar la Aplicación Web
+1. Haz clic en el botón azul **Implementar > Nueva implementación**.
+2. Selecciona el tipo **Aplicación web**.
+3. Configuración:
+    - **Descripción:** GesMenu v1
+    - **Ejecutar como:** Tú (tu email)
+    - **Quién tiene acceso:** Cualquiera (esto permite que los familiares accedan sin cuenta de Google).
+4. Haz clic en **Implementar**.
+5. Copia la **URL de la aplicación web**. Esta es la dirección que debes enviar a los jugadores.
+
+---
+
+## 6. Gestión con GitHub
 
 Se recomienda organizar el repositorio de la siguiente manera:
 
