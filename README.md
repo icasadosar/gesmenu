@@ -73,3 +73,12 @@ Si no utilizas CLASP, sigue estos pasos para poner la web en marcha:
 ├── appsscript.json  # Manifiesto de Google
 └── README.md        # Esta guía
 ```
+
+# Sincronización con CLASP
+Para mantener el código en GitHub y desplegarlo en Google:
+
+npm install -g @google/clasp
+clasp login
+clasp clone "ID_DEL_SCRIPT"
+clasp push (Para enviar cambios a Google Sheets)
+git push origin main (Para enviar cambios a GitHub)

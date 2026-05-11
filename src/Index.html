@@ -61,14 +61,23 @@
       <button class="outline" onclick="addComensal('Acompañante')">+ Añadir Acompañante</button>
 
       <hr>
-      <label for="observaciones">Alergias o Comentarios (Todo el grupo)</label>
-      <textarea id="observaciones" placeholder="Ej: 1 celíaco, 2 vegetarianos..."></textarea>
 
       <div class="sticky-bottom">
         <button id="btn-enviar" onclick="enviarFormulario()">Enviar Elecciones</button>
       </div>
     </section>
   </main>
+
+  <script>
+    function showLoading(msg) {
+      document.getElementById('loading-overlay').style.display = 'flex';
+      if (msg) document.querySelector('#loading-overlay p').innerText = msg;
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
 window.onload = () => {
   const select = document.getElementById('select-jugador');
   select.disabled = true; // Bloqueamos mientras carga
@@ -110,15 +119,27 @@ window.onload = () => {
     .getJugadores();
 };
 
+    let opcionesMenuGlobal = null;
+
     function addComensal(tipo, isFixed = false, datos = null) {
       if (tipo === 'Jugador') return;
 
       const container = document.getElementById('lista-comensales');
-      const id = Date.now();
+      const id = Date.now() + Math.floor(Math.random() * 1000);
       const div = document.createElement('div');
       div.className = 'comensal-card';
       div.id = `c-${id}`;
       
+      const sel = (val, target) => (val && val.toString().trim() === target) ? 'selected' : '';
+      
+      // Función para generar las opciones del select dinámicamente
+      const renderOptions = (tipoMenu, valorSeleccionado) => {
+        if (!opcionesMenuGlobal || !opcionesMenuGlobal[tipoMenu]) return '<option value="">Sin opciones</option>';
+        return opcionesMenuGlobal[tipoMenu].map(opt => 
+          `<option value="${opt}" ${sel(valorSeleccionado, opt)}>${opt}</option>`
+        ).join('');
+      };
+
       div.innerHTML = `
         <div class="comensal-header">
           <h4>${tipo}</h4>
@@ -129,39 +150,56 @@ window.onload = () => {
         <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}">
 
         <div class="menu-options">
-          <label>Cena Viernes</label>
-          <select class="c-cenaV">
-            <option value="Opción 1" ${datos?.cenaV === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
-            <option value="Opción 2" ${datos?.cenaV === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
-          </select>
+          <div class="grid">
+            <div>
+              <label>Cena Viernes</label>
+              <select class="c-cenaV">
+                ${renderOptions('cenaV', datos?.cenaV)}
+              </select>
+            </div>
+            <div>
+              <label>Postre Viernes</label>
+              <select class="c-postreV">
+                ${renderOptions('postreV', datos?.postreV)}
+              </select>
+            </div>
+          </div>
 
           <label>Comida Sábado (1º, 2º, Postre)</label>
           <div class="grid">
             <select class="c-comidaS1">
-              <option value="P1-Op1" ${datos?.comidaS1 === 'P1-Op1' ? 'selected' : ''}>1º Op1</option>
-              <option value="P1-Op2" ${datos?.comidaS1 === 'P1-Op2' ? 'selected' : ''}>1º Op2</option>
+              ${renderOptions('comidaS1', datos?.comidaS1)}
             </select>
             <select class="c-comidaS2">
-              <option value="P2-Op1" ${datos?.comidaS2 === 'P2-Op1' ? 'selected' : ''}>2º Op1</option>
-              <option value="P2-Op2" ${datos?.comidaS2 === 'P2-Op2' ? 'selected' : ''}>2º Op2</option>
+              ${renderOptions('comidaS2', datos?.comidaS2)}
             </select>
-            <select class="c-comidaS3">
-              <option value="P-Op1" ${datos?.comidaS3 === 'P-Op1' ? 'selected' : ''}>P-Op1</option>
-              <option value="P-Op2" ${datos?.comidaS3 === 'P-Op2' ? 'selected' : ''}>P-Op2</option>
+            <select class="c-postreComidaS">
+              ${renderOptions('postreComidaS', datos?.postreComidaS)}
             </select>
           </div>
 
-          <label>Cena Sábado</label>
-          <select class="c-cenaS">
-            <option value="Opción 1" ${datos?.cenaS === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
-            <option value="Opción 2" ${datos?.cenaS === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
-          </select>
+          <div class="grid">
+            <div>
+              <label>Cena Sábado</label>
+              <select class="c-cenaS">
+                ${renderOptions('cenaS', datos?.cenaS)}
+              </select>
+            </div>
+            <div>
+              <label>Postre Cena Sábado</label>
+              <select class="c-postreCenaS">
+                ${renderOptions('postreCenaS', datos?.postreCenaS)}
+              </select>
+            </div>
+          </div>
 
           <label>Picnic Domingo</label>
           <select class="c-picnicD">
-            <option value="Opción 1" ${datos?.picnicD === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
-            <option value="Opción 2" ${datos?.picnicD === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
+            ${renderOptions('picnicD', datos?.picnicD)}
           </select>
+
+          <label>Alergias o Comentarios (Individual)</label>
+          <input type="text" class="c-observaciones" placeholder="Ej: Celíaco, sin lactosa..." value="${datos ? datos.observaciones : ''}">
         </div>
         <input type="hidden" class="c-tipo" value="${tipo}">
       `;
@@ -171,17 +209,30 @@ window.onload = () => {
     function cargarDatosPrevios() {
       const nombre = document.getElementById('select-jugador').value;
       if (!nombre) return;
+
+      showLoading("Buscando datos previos y menú...");
+
       google.script.run.withSuccessHandler(res => {
+        hideLoading();
         document.getElementById('lista-comensales').innerHTML = '';
-        if (res) {
-          document.getElementById('observaciones').value = res.observaciones;
-          res.comensales.forEach(c => {
+        
+        // Guardamos las opciones del menú que vienen del servidor
+        opcionesMenuGlobal = res.opciones;
+
+        if (res.datos) {
+          res.datos.comensales.forEach(c => {
             if (c.tipo === 'Acompañante') {
               addComensal(c.tipo, false, c);
             }
           });
         }
-      }).getDatosPrevios(nombre);
+      })
+      .withFailureHandler(err => {
+        hideLoading();
+        console.error(err);
+        alert("Error al cargar datos: " + err.message);
+      })
+      .getDatosPrevios(nombre);
     }
 
     function enviarFormulario() {
@@ -198,7 +249,6 @@ window.onload = () => {
 
       const datos = {
         jugador: nombreJugador,
-        observaciones: document.getElementById('observaciones').value,
         comensales: []
       };
 
@@ -206,11 +256,14 @@ window.onload = () => {
         tipo: 'Jugador',
         nombre: nombreJugador,
         cenaV: 'N/A',
+        postreV: 'N/A',
         comidaS1: 'N/A',
         comidaS2: 'N/A',
-        comidaS3: 'N/A',
+        postreComidaS: 'N/A',
         cenaS: 'N/A',
-        picnicD: 'N/A'
+        postreCenaS: 'N/A',
+        picnicD: 'N/A',
+        observaciones: ''
       });
 
       document.querySelectorAll('.comensal-card').forEach(card => {
@@ -218,11 +271,14 @@ window.onload = () => {
           tipo: card.querySelector('.c-tipo').value,
           nombre: card.querySelector('.c-nombre').value,
           cenaV: card.querySelector('.c-cenaV').value,
+          postreV: card.querySelector('.c-postreV').value,
           comidaS1: card.querySelector('.c-comidaS1').value,
           comidaS2: card.querySelector('.c-comidaS2').value,
-          comidaS3: card.querySelector('.c-comidaS3').value,
+          postreComidaS: card.querySelector('.c-postreComidaS').value,
           cenaS: card.querySelector('.c-cenaS').value,
-          picnicD: card.querySelector('.c-picnicD').value
+          postreCenaS: card.querySelector('.c-postreCenaS').value,
+          picnicD: card.querySelector('.c-picnicD').value,
+          observaciones: card.querySelector('.c-observaciones').value
         });
       });
 
