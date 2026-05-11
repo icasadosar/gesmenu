@@ -13,7 +13,8 @@ function getJugadores() {
     if (!sheet) return ["Error: No existe pestaña 'Configuracion'"];
     
     const lastRow = sheet.getLastRow();
-    if (lastRow === 0) return []; // Hoja vacía
+    // Si la hoja está vacía, lastRow es 0. getRange fallaría.
+    if (lastRow < 1) return []; 
     
     const values = sheet.getRange(1, 1, lastRow, 1).getValues();
     // Filtramos celdas vacías y aplanamos el array
