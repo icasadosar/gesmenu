@@ -169,15 +169,18 @@
       }
 
       document.querySelectorAll('.comensal-card').forEach(card => {
+        const menuContainer = card.querySelector('.menu-options');
+        const isVisible = menuContainer && menuContainer.style.display !== 'none';
+
         datos.comensales.push({
           tipo: card.querySelector('.c-tipo').value,
           nombre: card.querySelector('.c-nombre').value,
-          cenaV: card.querySelector('.c-cenaV').value,
-          comidaS1: card.querySelector('.c-comidaS1').value,
-          comidaS2: card.querySelector('.c-comidaS2').value,
-          comidaS3: card.querySelector('.c-comidaS3').value,
-          cenaS: card.querySelector('.c-cenaS').value,
-          picnicD: card.querySelector('.c-picnicD').value
+          cenaV: isVisible ? card.querySelector('.c-cenaV').value : 'N/A',
+          comidaS1: isVisible ? card.querySelector('.c-comidaS1').value : 'N/A',
+          comidaS2: isVisible ? card.querySelector('.c-comidaS2').value : 'N/A',
+          comidaS3: isVisible ? card.querySelector('.c-comidaS3').value : 'N/A',
+          cenaS: isVisible ? card.querySelector('.c-cenaS').value : 'N/A',
+          picnicD: isVisible ? card.querySelector('.c-picnicD').value : 'N/A'
         });
       });
 
@@ -185,6 +188,12 @@
         alert(msg);
         btn.disabled = false;
         btn.innerText = "Enviar Elecciones";
+      }).guardarRespuestas(datos);
+    }
+  </script>
+</body>
+</html>
+.innerText = "Enviar Elecciones";
       }).guardarRespuestas(datos);
     }
   </script>
