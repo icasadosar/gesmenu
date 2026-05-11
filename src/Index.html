@@ -69,39 +69,46 @@
       </div>
     </section>
   </main>
+window.onload = () => {
+  const select = document.getElementById('select-jugador');
+  select.disabled = true; // Bloqueamos mientras carga
+  select.innerHTML = '<option value="">Cargando jugadores...</option>';
 
-  <script>
-    window.onload = () => {
-      const select = document.getElementById('select-jugador');
-      
-      google.script.run
-        .withSuccessHandler(list => {
-          if (list.length > 0 && list[0].startsWith("Error:")) {
-            alert(list[0]);
-            select.innerHTML = '<option value="">Error de configuración</option>';
-            return;
-          }
-          
-          if (list.length === 0) {
-            select.innerHTML = '<option value="">No hay jugadores inscritos</option>';
-            return;
-          }
+  showLoading("Cargando lista de jugadores...");
 
-          select.innerHTML = '<option value="">-- Elige tu nombre --</option>';
-          list.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.text = name;
-            select.appendChild(option);
-          });
-        })
-        .withFailureHandler(err => {
-          console.error(err);
-          alert("Error al conectar con Google Sheets: " + err.message);
-          select.innerHTML = '<option value="">Error de conexión</option>';
-        })
-        .getJugadores();
-    };
+  google.script.run
+    .withSuccessHandler(list => {
+      hideLoading();
+      select.disabled = false; // Desbloqueamos
+
+      if (list.length > 0 && list[0].startsWith("Error:")) {
+        alert(list[0]);
+        select.innerHTML = '<option value="">Error de configuración</option>';
+        return;
+      }
+
+      if (list.length === 0) {
+        select.innerHTML = '<option value="">No hay jugadores inscritos</option>';
+        return;
+      }
+
+      select.innerHTML = '<option value="">-- Elige tu nombre --</option>';
+      list.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.text = name;
+        select.appendChild(option);
+      });
+    })
+    .withFailureHandler(err => {
+      hideLoading();
+      select.disabled = false;
+      console.error(err);
+      alert("Error al conectar con Google Sheets: " + err.message);
+      select.innerHTML = '<option value="">Error de conexión</option>';
+    })
+    .getJugadores();
+};
 
     function addComensal(tipo, isFixed = false, datos = null) {
       if (tipo === 'Jugador') return;
