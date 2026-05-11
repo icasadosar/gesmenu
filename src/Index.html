@@ -74,11 +74,11 @@
           select.innerHTML = '<option value="">Error de conexión</option>';
         })
         .getJugadores();
-        
-      addComensal('Jugador', true);
     };
 
     function addComensal(tipo, isFixed = false, datos = null) {
+      if (tipo === 'Jugador') return;
+
       const container = document.getElementById('lista-comensales');
       const id = Date.now();
       const div = document.createElement('div');
@@ -88,99 +88,107 @@
       div.innerHTML = `
         <div class="comensal-header">
           <h4>${tipo}</h4>
-          ${!isFixed ? `<button class="btn-remove" onclick="document.getElementById('c-${id}').remove()">✕</button>` : ''}
+          <button class="btn-remove" onclick="document.getElementById('c-${id}').remove()">✕</button>
         </div>
         
         <label>Nombre completo</label>
-        <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}" ${isFixed ? 'readonly' : ''}>
+        <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}">
 
-        <label>Cena Viernes</label>
-        <select class="c-cenaV">
-          <option value="Opción 1" ${datos?.cenaV === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
-          <option value="Opción 2" ${datos?.cenaV === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
-        </select>
+        <div class="menu-options">
+          <label>Cena Viernes</label>
+          <select class="c-cenaV">
+            <option value="Opción 1" ${datos?.cenaV === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
+            <option value="Opción 2" ${datos?.cenaV === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
+          </select>
 
-        <label>Comida Sábado (1º, 2º, Postre)</label>
-        <div class="grid">
-          <select class="c-comidaS1">
-            <option value="P1-Op1" ${datos?.comidaS1 === 'P1-Op1' ? 'selected' : ''}>1º Op1</option>
-            <option value="P1-Op2" ${datos?.comidaS1 === 'P1-Op2' ? 'selected' : ''}>1º Op2</option>
+          <label>Comida Sábado (1º, 2º, Postre)</label>
+          <div class="grid">
+            <select class="c-comidaS1">
+              <option value="P1-Op1" ${datos?.comidaS1 === 'P1-Op1' ? 'selected' : ''}>1º Op1</option>
+              <option value="P1-Op2" ${datos?.comidaS1 === 'P1-Op2' ? 'selected' : ''}>1º Op2</option>
+            </select>
+            <select class="c-comidaS2">
+              <option value="P2-Op1" ${datos?.comidaS2 === 'P2-Op1' ? 'selected' : ''}>2º Op1</option>
+              <option value="P2-Op2" ${datos?.comidaS2 === 'P2-Op2' ? 'selected' : ''}>2º Op2</option>
+            </select>
+            <select class="c-comidaS3">
+              <option value="P-Op1" ${datos?.comidaS3 === 'P-Op1' ? 'selected' : ''}>P-Op1</option>
+              <option value="P-Op2" ${datos?.comidaS3 === 'P-Op2' ? 'selected' : ''}>P-Op2</option>
+            </select>
+          </div>
+
+          <label>Cena Sábado</label>
+          <select class="c-cenaS">
+            <option value="Opción 1" ${datos?.cenaS === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
+            <option value="Opción 2" ${datos?.cenaS === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
           </select>
-          <select class="c-comidaS2">
-            <option value="P2-Op1" ${datos?.comidaS2 === 'P2-Op1' ? 'selected' : ''}>2º Op1</option>
-            <option value="P2-Op2" ${datos?.comidaS2 === 'P2-Op2' ? 'selected' : ''}>2º Op2</option>
-          </select>
-          <select class="c-comidaS3">
-            <option value="P-Op1" ${datos?.comidaS3 === 'P-Op1' ? 'selected' : ''}>P-Op1</option>
-            <option value="P-Op2" ${datos?.comidaS3 === 'P-Op2' ? 'selected' : ''}>P-Op2</option>
+
+          <label>Picnic Domingo</label>
+          <select class="c-picnicD">
+            <option value="Opción 1" ${datos?.picnicD === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
+            <option value="Opción 2" ${datos?.picnicD === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
           </select>
         </div>
-
-        <label>Cena Sábado</label>
-        <select class="c-cenaS">
-          <option value="Opción 1" ${datos?.cenaS === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
-          <option value="Opción 2" ${datos?.cenaS === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
-        </select>
-
-        <label>Picnic Domingo</label>
-        <select class="c-picnicD">
-          <option value="Opción 1" ${datos?.picnicD === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
-          <option value="Opción 2" ${datos?.picnicD === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
-        </select>
         <input type="hidden" class="c-tipo" value="${tipo}">
       `;
       container.appendChild(div);
-      
-      if(isFixed) {
-        document.getElementById('select-jugador').addEventListener('change', (e) => {
-          div.querySelector('.c-nombre').value = e.target.value;
-        });
-      }
     }
 
     function cargarDatosPrevios() {
       const nombre = document.getElementById('select-jugador').value;
       if (!nombre) return;
       google.script.run.withSuccessHandler(res => {
+        document.getElementById('lista-comensales').innerHTML = '';
         if (res) {
-          document.getElementById('lista-comensales').innerHTML = '';
           document.getElementById('observaciones').value = res.observaciones;
-          res.comensales.forEach((c, index) => addComensal(c.tipo, index === 0, c));
+          res.comensales.forEach(c => {
+            if (c.tipo === 'Acompañante') {
+              addComensal(c.tipo, false, c);
+            }
+          });
         }
       }).getDatosPrevios(nombre);
     }
 
     function enviarFormulario() {
       const btn = document.getElementById('btn-enviar');
+      const nombreJugador = document.getElementById('select-jugador').value;
+
+      if (!nombreJugador) {
+        alert("Por favor, selecciona tu nombre.");
+        return;
+      }
+
       btn.disabled = true;
       btn.innerText = "Enviando...";
 
       const datos = {
-        jugador: document.getElementById('select-jugador').value,
+        jugador: nombreJugador,
         observaciones: document.getElementById('observaciones').value,
         comensales: []
       };
 
-      if (!datos.jugador) {
-        alert("Por favor, selecciona tu nombre.");
-        btn.disabled = false;
-        btn.innerText = "Enviar Elecciones";
-        return;
-      }
+      datos.comensales.push({
+        tipo: 'Jugador',
+        nombre: nombreJugador,
+        cenaV: 'N/A',
+        comidaS1: 'N/A',
+        comidaS2: 'N/A',
+        comidaS3: 'N/A',
+        cenaS: 'N/A',
+        picnicD: 'N/A'
+      });
 
       document.querySelectorAll('.comensal-card').forEach(card => {
-        const menuContainer = card.querySelector('.menu-options');
-        const isVisible = menuContainer && menuContainer.style.display !== 'none';
-
         datos.comensales.push({
           tipo: card.querySelector('.c-tipo').value,
           nombre: card.querySelector('.c-nombre').value,
-          cenaV: isVisible ? card.querySelector('.c-cenaV').value : 'N/A',
-          comidaS1: isVisible ? card.querySelector('.c-comidaS1').value : 'N/A',
-          comidaS2: isVisible ? card.querySelector('.c-comidaS2').value : 'N/A',
-          comidaS3: isVisible ? card.querySelector('.c-comidaS3').value : 'N/A',
-          cenaS: isVisible ? card.querySelector('.c-cenaS').value : 'N/A',
-          picnicD: isVisible ? card.querySelector('.c-picnicD').value : 'N/A'
+          cenaV: card.querySelector('.c-cenaV').value,
+          comidaS1: card.querySelector('.c-comidaS1').value,
+          comidaS2: card.querySelector('.c-comidaS2').value,
+          comidaS3: card.querySelector('.c-comidaS3').value,
+          cenaS: card.querySelector('.c-cenaS').value,
+          picnicD: card.querySelector('.c-picnicD').value
         });
       });
 
@@ -188,12 +196,6 @@
         alert(msg);
         btn.disabled = false;
         btn.innerText = "Enviar Elecciones";
-      }).guardarRespuestas(datos);
-    }
-  </script>
-</body>
-</html>
-.innerText = "Enviar Elecciones";
       }).guardarRespuestas(datos);
     }
   </script>
