@@ -14,6 +14,53 @@
     select, input { margin-bottom: 0.5rem !important; }
     label { font-weight: bold; font-size: 0.9rem; margin-top: 0.5rem; }
     h4 { margin-bottom: 0.5rem; color: #106ebe; }
+
+    /* Estilos para Controles Segmentados */
+    .segmented-control {
+      display: flex;
+      flex-direction: column; /* Forzamos vertical */
+      gap: 4px;
+      background: #f0f0f0;
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .segmented-control input[type="radio"],
+    .segmented-control input[type="checkbox"] {
+      display: none;
+    }
+    .segmented-control label {
+      width: 100%; /* Ancho completo */
+      text-align: left; /* Alineado a la izquierda para mejor lectura de nombres largos */
+      padding: 0.75rem 1rem;
+      margin: 0 !important;
+      cursor: pointer;
+      border-radius: 6px;
+      background: white;
+      color: #333;
+      font-weight: normal;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border: 1px solid #ddd;
+      display: block;
+      min-height: 3rem;
+    }
+    .segmented-control input[type="radio"]:checked + label,
+    .segmented-control input[type="checkbox"]:checked + label {
+      background: #106ebe;
+      color: white;
+      border-color: #106ebe;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-weight: bold;
+    }
+    /* Asegurar que el Picnic (deshabilitado pero marcado) se vea azul */
+    .segmented-control input[type="radio"]:disabled:checked + label,
+    .segmented-control input[type="checkbox"]:disabled:checked + label {
+      background: #106ebe;
+      color: white;
+      opacity: 1;
+      cursor: default;
+    }
     
     /* Estilos para el Loading */
     #loading-overlay {
@@ -46,7 +93,7 @@
 
   <main class="container">
     <header>
-      <h1>🍴 Menú Torneo</h1>
+      <h1>🍴 Menú Torneo Cudillero CUP 2026</h1>
       <p>Selecciona tu nombre y el de tus acompañantes.</p>
     </header>
 
@@ -130,14 +177,29 @@ window.onload = () => {
       div.className = 'comensal-card';
       div.id = `c-${id}`;
       
-      const sel = (val, target) => (val && val.toString().trim() === target) ? 'selected' : '';
+      const isChecked = (val, target) => (val && val.toString().trim() === target) ? 'checked' : '';
       
-      // Función para generar las opciones del select dinámicamente
-      const renderOptions = (tipoMenu, valorSeleccionado) => {
-        if (!opcionesMenuGlobal || !opcionesMenuGlobal[tipoMenu]) return '<option value="">Sin opciones</option>';
-        return opcionesMenuGlobal[tipoMenu].map(opt => 
-          `<option value="${opt}" ${sel(valorSeleccionado, opt)}>${opt}</option>`
-        ).join('');
+      // Función para generar los controles segmentados dinámicamente
+      const renderSegmented = (tipoMenu, valorSeleccionado) => {
+        if (!opcionesMenuGlobal || !opcionesMenuGlobal[tipoMenu]) return '<p>Sin opciones</p>';
+        
+        const isPicnic = tipoMenu === 'picnicD';
+        const inputType = isPicnic ? 'checkbox' : 'radio';
+
+        return `
+          <div class="segmented-control">
+            ${opcionesMenuGlobal[tipoMenu].map((opt, index) => {
+              // Si es Picnic, forzamos que esté marcado y deshabilitado
+              const checked = isPicnic ? 'checked' : isChecked(valorSeleccionado, opt);
+              const disabled = isPicnic ? 'disabled' : '';
+              
+              return `
+                <input type="${inputType}" id="${tipoMenu}-${id}-${index}" name="${tipoMenu}-${id}" value="${opt}" ${checked} ${disabled}>
+                <label for="${tipoMenu}-${id}-${index}">${opt}</label>
+              `;
+            }).join('')}
+          </div>
+        `;
       };
 
       div.innerHTML = `
@@ -150,53 +212,29 @@ window.onload = () => {
         <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}">
 
         <div class="menu-options">
-          <div class="grid">
-            <div>
-              <label>Cena Viernes</label>
-              <select class="c-cenaV">
-                ${renderOptions('cenaV', datos?.cenaV)}
-              </select>
-            </div>
-            <div>
-              <label>Postre Viernes</label>
-              <select class="c-postreV">
-                ${renderOptions('postreV', datos?.postreV)}
-              </select>
-            </div>
-          </div>
+          <label>Cena Viernes - Plato</label>
+          ${renderSegmented('cenaV', datos?.cenaV)}
 
-          <label>Comida Sábado (1º, 2º, Postre)</label>
-          <div class="grid">
-            <select class="c-comidaS1">
-              ${renderOptions('comidaS1', datos?.comidaS1)}
-            </select>
-            <select class="c-comidaS2">
-              ${renderOptions('comidaS2', datos?.comidaS2)}
-            </select>
-            <select class="c-postreComidaS">
-              ${renderOptions('postreComidaS', datos?.postreComidaS)}
-            </select>
-          </div>
+          <label>Cena Viernes - Postre</label>
+          ${renderSegmented('postreV', datos?.postreV)}
 
-          <div class="grid">
-            <div>
-              <label>Cena Sábado</label>
-              <select class="c-cenaS">
-                ${renderOptions('cenaS', datos?.cenaS)}
-              </select>
-            </div>
-            <div>
-              <label>Postre Cena Sábado</label>
-              <select class="c-postreCenaS">
-                ${renderOptions('postreCenaS', datos?.postreCenaS)}
-              </select>
-            </div>
-          </div>
+          <label>Comida Sábado - Primero</label>
+          ${renderSegmented('comidaS1', datos?.comidaS1)}
+
+          <label>Comida Sábado - Segundo</label>
+          ${renderSegmented('comidaS2', datos?.comidaS2)}
+
+          <label>Comida Sábado - Postre</label>
+          ${renderSegmented('postreComidaS', datos?.postreComidaS)}
+
+          <label>Cena Sábado - Plato</label>
+          ${renderSegmented('cenaS', datos?.cenaS)}
+
+          <label>Cena Sábado - Postre</label>
+          ${renderSegmented('postreCenaS', datos?.postreCenaS)}
 
           <label>Picnic Domingo</label>
-          <select class="c-picnicD">
-            ${renderOptions('picnicD', datos?.picnicD)}
-          </select>
+          ${renderSegmented('picnicD', datos?.picnicD)}
 
           <label>Alergias o Comentarios (Individual)</label>
           <input type="text" class="c-observaciones" placeholder="Ej: Celíaco, sin lactosa..." value="${datos ? datos.observaciones : ''}">
@@ -255,29 +293,40 @@ window.onload = () => {
       datos.comensales.push({
         tipo: 'Jugador',
         nombre: nombreJugador,
-        cenaV: 'N/A',
-        postreV: 'N/A',
-        comidaS1: 'N/A',
-        comidaS2: 'N/A',
-        postreComidaS: 'N/A',
-        cenaS: 'N/A',
-        postreCenaS: 'N/A',
-        picnicD: 'N/A',
+        cenaV: 'Pechuga empanada + croquetas + huevo + patatas',
+        postreV: 'Flan de chocolate',
+        comidaS1: 'Macarrones con atún y tomate',
+        comidaS2: 'Cachopín de cerdo',
+        postreComidaS: 'Natillas',
+        cenaS: 'Hamburguesa + patatas + croquetas',
+        postreCenaS: 'Natillas',
+        picnicD: 'Bacon y Pollo',
         observaciones: ''
       });
 
       document.querySelectorAll('.comensal-card').forEach(card => {
+        const cardId = card.id.replace('c-', '');
+        const getVal = (name) => {
+          if (name === 'picnicD') {
+            // Para el picnic, como hay varios marcados (fijos), los unimos con una coma
+            const checkeds = Array.from(card.querySelectorAll(`input[name="${name}-${cardId}"]:checked`));
+            return checkeds.map(c => c.value).join(', ');
+          }
+          const checked = card.querySelector(`input[name="${name}-${cardId}"]:checked`);
+          return checked ? checked.value : 'No seleccionado';
+        };
+
         datos.comensales.push({
           tipo: card.querySelector('.c-tipo').value,
           nombre: card.querySelector('.c-nombre').value,
-          cenaV: card.querySelector('.c-cenaV').value,
-          postreV: card.querySelector('.c-postreV').value,
-          comidaS1: card.querySelector('.c-comidaS1').value,
-          comidaS2: card.querySelector('.c-comidaS2').value,
-          postreComidaS: card.querySelector('.c-postreComidaS').value,
-          cenaS: card.querySelector('.c-cenaS').value,
-          postreCenaS: card.querySelector('.c-postreCenaS').value,
-          picnicD: card.querySelector('.c-picnicD').value,
+          cenaV: getVal('cenaV'),
+          postreV: getVal('postreV'),
+          comidaS1: getVal('comidaS1'),
+          comidaS2: getVal('comidaS2'),
+          postreComidaS: getVal('postreComidaS'),
+          cenaS: getVal('cenaS'),
+          postreCenaS: getVal('postreCenaS'),
+          picnicD: getVal('picnicD'),
           observaciones: card.querySelector('.c-observaciones').value
         });
       });
