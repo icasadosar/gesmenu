@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Menú Torneo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    :root { --spacing: 1rem; }
+    body { padding: 1rem; }
+    .comensal-card { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; background: #f9f9f9; }
+    .comensal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .btn-remove { background: #d32f2f !important; border: none; padding: 0.2rem 0.5rem; width: auto; }
+    .sticky-bottom { position: sticky; bottom: 0; background: white; padding: 1rem 0; border-top: 1px solid #eee; z-index: 100; }
+    select, input { margin-bottom: 0.5rem !important; }
+    label { font-weight: bold; font-size: 0.9rem; margin-top: 0.5rem; }
+    h4 { margin-bottom: 0.5rem; color: #106ebe; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>🍴 Menú Torneo</h1>
+      <p>Selecciona tu nombre y el de tus acompañantes.</p>
+    </header>
+
+    <section id="form-container">
+      <label for="select-jugador">Jugador Principal</label>
+      <select id="select-jugador" onchange="cargarDatosPrevios()">
+        <option value="">Cargando jugadores...</option>
+      </select>
+
+      <div id="lista-comensales"></div>
+
+      <button class="outline" onclick="addComensal('Acompañante')">+ Añadir Acompañante</button>
+
+      <hr>
+      <label for="observaciones">Alergias o Comentarios (Todo el grupo)</label>
+      <textarea id="observaciones" placeholder="Ej: 1 celíaco, 2 vegetarianos..."></textarea>
+
+      <div class="sticky-bottom">
+        <button id="btn-enviar" onclick="enviarFormulario()">Enviar Elecciones</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    window.onload = () => {
+      google.script.run.withSuccessHandler(list => {
+        const select = document.getElementById('select-jugador');
+        select.innerHTML = '<option value="">-- Elige tu nombre --</option>';
+        list.forEach(name => {
+          select.innerHTML += `<option value="${name}">${name}</option>`;
+        });
+      }).getJugadores();
+      addComensal('Jugador', true);
+    };
+
+    function addComensal(tipo, isFixed = false, datos = null) {
+      const container = document.getElementById('lista-comensales');
+      const id = Date.now();
+      const div = document.createElement('div');
+      div.className = 'comensal-card';
+      div.id = `c-${id}`;
+      
+      div.innerHTML = `
+        <div class="comensal-header">
+          <h4>${tipo}</h4>
+          ${!isFixed ? `<button class="btn-remove" onclick="document.getElementById('c-${id}').remove()">✕</button>` : ''}
+        </div>
+        
+        <label>Nombre completo</label>
+        <input type="text" class="c-nombre" placeholder="Nombre" value="${datos ? datos.nombre : ''}" ${isFixed ? 'readonly' : ''}>
+
+        <label>Cena Viernes</label>
+        <select class="c-cenaV">
+          <option value="Opción 1" ${datos?.cenaV === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
+          <option value="Opción 2" ${datos?.cenaV === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
+        </select>
+
+        <label>Comida Sábado (1º, 2º, Postre)</label>
+        <div class="grid">
+          <select class="c-comidaS1">
+            <option value="P1-Op1" ${datos?.comidaS1 === 'P1-Op1' ? 'selected' : ''}>1º Op1</option>
+            <option value="P1-Op2" ${datos?.comidaS1 === 'P1-Op2' ? 'selected' : ''}>1º Op2</option>
+          </select>
+          <select class="c-comidaS2">
+            <option value="P2-Op1" ${datos?.comidaS2 === 'P2-Op1' ? 'selected' : ''}>2º Op1</option>
+            <option value="P2-Op2" ${datos?.comidaS2 === 'P2-Op2' ? 'selected' : ''}>2º Op2</option>
+          </select>
+          <select class="c-comidaS3">
+            <option value="P-Op1" ${datos?.comidaS3 === 'P-Op1' ? 'selected' : ''}>P-Op1</option>
+            <option value="P-Op2" ${datos?.comidaS3 === 'P-Op2' ? 'selected' : ''}>P-Op2</option>
+          </select>
+        </div>
+
+        <label>Cena Sábado</label>
+        <select class="c-cenaS">
+          <option value="Opción 1" ${datos?.cenaS === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
+          <option value="Opción 2" ${datos?.cenaS === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
+        </select>
+
+        <label>Picnic Domingo</label>
+        <select class="c-picnicD">
+          <option value="Opción 1" ${datos?.picnicD === 'Opción 1' ? 'selected' : ''}>Opción 1</option>
+          <option value="Opción 2" ${datos?.picnicD === 'Opción 2' ? 'selected' : ''}>Opción 2</option>
+        </select>
+        <input type="hidden" class="c-tipo" value="${tipo}">
+      `;
+      container.appendChild(div);
+      
+      if(isFixed) {
+        document.getElementById('select-jugador').addEventListener('change', (e) => {
+          div.querySelector('.c-nombre').value = e.target.value;
+        });
+      }
+    }
+
+    function cargarDatosPrevios() {
+      const nombre = document.getElementById('select-jugador').value;
+      if (!nombre) return;
+      google.script.run.withSuccessHandler(res => {
+        if (res) {
+          document.getElementById('lista-comensales').innerHTML = '';
+          document.getElementById('observaciones').value = res.observaciones;
+          res.comensales.forEach((c, index) => addComensal(c.tipo, index === 0, c));
+        }
+      }).getDatosPrevios(nombre);
+    }
+
+    function enviarFormulario() {
+      const btn = document.getElementById('btn-enviar');
+      btn.disabled = true;
+      btn.innerText = "Enviando...";
+
+      const datos = {
+        jugador: document.getElementById('select-jugador').value,
+        observaciones: document.getElementById('observaciones').value,
+        comensales: []
+      };
+
+      if (!datos.jugador) {
+        alert("Por favor, selecciona tu nombre.");
+        btn.disabled = false;
+        btn.innerText = "Enviar Elecciones";
+        return;
+      }
+
+      document.querySelectorAll('.comensal-card').forEach(card => {
+        datos.comensales.push({
+          tipo: card.querySelector('.c-tipo').value,
+          nombre: card.querySelector('.c-nombre').value,
+          cenaV: card.querySelector('.c-cenaV').value,
+          comidaS1: card.querySelector('.c-comidaS1').value,
+          comidaS2: card.querySelector('.c-comidaS2').value,
+          comidaS3: card.querySelector('.c-comidaS3').value,
+          cenaS: card.querySelector('.c-cenaS').value,
+          picnicD: card.querySelector('.c-picnicD').value
+        });
+      });
+
+      google.script.run.withSuccessHandler(msg => {
+        alert(msg);
+        btn.disabled = false;
+        btn.innerText = "Enviar Elecciones";
+      }).guardarRespuestas(datos);
+    }
+  </script>
+</body>
+</html>
