@@ -45,13 +45,36 @@
 
   <script>
     window.onload = () => {
-      google.script.run.withSuccessHandler(list => {
-        const select = document.getElementById('select-jugador');
-        select.innerHTML = '<option value="">-- Elige tu nombre --</option>';
-        list.forEach(name => {
-          select.innerHTML += `<option value="${name}">${name}</option>`;
-        });
-      }).getJugadores();
+      const select = document.getElementById('select-jugador');
+      
+      google.script.run
+        .withSuccessHandler(list => {
+          if (list.length > 0 && list[0].startsWith("Error:")) {
+            alert(list[0]);
+            select.innerHTML = '<option value="">Error de configuración</option>';
+            return;
+          }
+          
+          if (list.length === 0) {
+            select.innerHTML = '<option value="">No hay jugadores inscritos</option>';
+            return;
+          }
+
+          select.innerHTML = '<option value="">-- Elige tu nombre --</option>';
+          list.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.text = name;
+            select.appendChild(option);
+          });
+        })
+        .withFailureHandler(err => {
+          console.error(err);
+          alert("Error al conectar con Google Sheets: " + err.message);
+          select.innerHTML = '<option value="">Error de conexión</option>';
+        })
+        .getJugadores();
+        
       addComensal('Jugador', true);
     };
 

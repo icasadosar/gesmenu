@@ -7,10 +7,20 @@ function doGet() {
 }
 
 function getJugadores() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Configuracion');
-  if (!sheet) return ["Error: No existe pestaña Configuracion"];
-  return sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues().flat();
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Configuracion');
+    if (!sheet) return ["Error: No existe pestaña 'Configuracion'"];
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow === 0) return []; // Hoja vacía
+    
+    const values = sheet.getRange(1, 1, lastRow, 1).getValues();
+    // Filtramos celdas vacías y aplanamos el array
+    return values.flat().map(v => v.toString().trim()).filter(v => v !== "");
+  } catch (e) {
+    return ["Error en el servidor: " + e.toString()];
+  }
 }
 
 function guardarRespuestas(datos) {
